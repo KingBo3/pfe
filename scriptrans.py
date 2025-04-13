@@ -56,7 +56,7 @@ try:
         rs.name AS source_reservation,
         rr.number_of_adult + rr.number_of_child + rr.inf AS occupancy,
         rr.card_group_id,
-        '' AS card_group_name,
+        agency.name AS card_group_name,
         rr.card_group_type,
         rr.market_code_id,
         mc.name AS market_code_name,
@@ -78,6 +78,7 @@ try:
     LEFT JOIN magic_hotels.market_codes mc ON rr.market_code_id = mc.id
     LEFT JOIN magic_hotels_skanes.reservation_room_nights rrn ON rrn.reservation_room_id = rr.id
     LEFT JOIN magic_hotels_skanes.rates rt ON rrn.rate_id = rt.id
+    LEFT JOIN magic_hotels_skanes.agency_cards agency ON rr.card_group_id = agency.id 
     """
 
     pg_cursor.execute(query)
