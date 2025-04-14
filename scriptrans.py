@@ -1,7 +1,6 @@
 import psycopg2
 from pymongo import MongoClient
-from datetime import datetime, date, time
-
+from datetime import datetime, date
 
 # PostgreSQL connection configuration
 pg_config = {
@@ -15,7 +14,7 @@ pg_config = {
 # MongoDB configuration
 mongo_uri = "mongodb://localhost:27017/"
 mongo_db_name = "pfetest"
-mongo_collection_name = "reservation_rooms_data1"
+mongo_collection_name = "reservation_rooms_data5"
 
 # Fields to transfer (for reference only)
 target_fields = [
@@ -40,7 +39,7 @@ try:
     mongo_db = mongo_client[mongo_db_name]
     mongo_collection = mongo_db[mongo_collection_name]
 
-    # SQL Query - join necessary tables
+    # Corrected SQL Query with JOIN instead of subquery
     query = """
     SELECT
         rr.reservation_id,
@@ -51,7 +50,7 @@ try:
         rr.departure AS departure_date,
         rr.stay,
         rr.booking_date,
-        '' AS origin_city,
+        gc.country AS origin_city,
         ro.name AS origin_reservation,
         rs.name AS source_reservation,
         rr.number_of_adult + rr.number_of_child + rr.inf AS occupancy,
@@ -78,9 +77,11 @@ try:
     LEFT JOIN magic_hotels.market_codes mc ON rr.market_code_id = mc.id
     LEFT JOIN magic_hotels_skanes.reservation_room_nights rrn ON rrn.reservation_room_id = rr.id
     LEFT JOIN magic_hotels_skanes.rates rt ON rrn.rate_id = rt.id
-    LEFT JOIN magic_hotels_skanes.agency_cards agency ON rr.card_group_id = agency.id 
+    LEFT JOIN magic_hotels.agency_cards agency ON rr.card_group_id = agency.id
+    LEFT JOIN magic_hotels.guest_cards gc ON rr.master_guest_id = gc.id
     """
 
+    # Execute and fetch data
     pg_cursor.execute(query)
     rows = pg_cursor.fetchall()
     colnames = [desc[0] for desc in pg_cursor.description]
@@ -89,7 +90,7 @@ try:
     documents = []
     for row in rows:
         doc = dict(zip(colnames, row))
-        # Convert datetime.date to string if needed
+        # Convert datetime.date to ISO format strings for MongoDB
         for k, v in doc.items():
             if isinstance(v, (datetime, date)):
                 doc[k] = v.isoformat()

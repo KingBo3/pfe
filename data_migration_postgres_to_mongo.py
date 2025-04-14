@@ -74,7 +74,7 @@ def extract_data_from_postgres(conn):
             rr.departure AS departure_date,
             rr.stay,
             rr.booking_date,
-            '' AS origin_city,
+            gc.country AS origin_city,
             ro.name AS origin_reservation,
             rs.name AS source_reservation,
             rr.number_of_adult + rr.number_of_child + rr.inf AS occupancy,
@@ -114,13 +114,15 @@ def extract_data_from_postgres(conn):
 
         FROM magic_hotels_skanes.reservation_rooms rr
         LEFT JOIN magic_hotels_skanes.room_types rrt ON rr.room_type_id = rrt.id
+        LEFT JOIN magic_hotels.guest_cards gc ON rr.master_guest_id = gc.id
         LEFT JOIN magic_hotels_skanes.room_types art ON rr.assigned_room_type_id = art.id
         LEFT JOIN magic_hotels_skanes.reservation_origins ro ON rr.reservation_origin_id = ro.id
         LEFT JOIN magic_hotels_skanes.reservation_sources rs ON rr.reservation_source_id = rs.id
         LEFT JOIN magic_hotels.market_codes mc ON rr.market_code_id = mc.id
         LEFT JOIN magic_hotels_skanes.reservation_room_nights rrn ON rrn.reservation_room_id = rr.id
         LEFT JOIN magic_hotels_skanes.rates rt ON rrn.rate_id = rt.id
-        LEFT JOIN magic_hotels_skanes.agency_cards agency ON rr.card_group_id = agency.id;
+        LEFT JOIN magic_hotels.agency_cards agency ON rr.card_group_id = agency.id
+     
 
     """)
 
